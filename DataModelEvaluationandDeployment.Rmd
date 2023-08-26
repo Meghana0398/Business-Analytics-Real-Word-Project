@@ -1,0 +1,103 @@
+---
+title: 'Project: Model Evaluation and Deployment'
+author: "Meghana Nerusu"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE) 
+library(tidyverse)
+library(dplyr)
+library(rpart)
+library(rpart.plot)
+```
+
+## Data Cleaning 
+
+```{r}
+advise_invest_clean <- read_csv("adviseinvest.csv", show_col_types = FALSE)  %>%            # Download data
+  select(-product) %>%                                        # Remove the product column
+  na.omit %>%                                                 # Remove NAs
+  filter(income > 0,                                          # Filter out mistaken data
+         num_accts < 5) %>% 
+  mutate(answered = factor(ifelse(answered==0, "no","yes"),   # Turn answered into yes/no factor
+                           levels  = c("no", "yes")),
+         female = factor(female),                             # Make categorical variables into factors
+         job = factor(job),
+         rent = factor(rent),
+         own_res = factor(own_res),
+         new_car = factor(new_car),
+         mobile = factor(mobile),
+         chk_acct = factor(chk_acct),
+         sav_acct = factor(sav_acct)) 
+advise_invest_clean
+
+customer_data_clean <- read_csv("customer_data.csv", show_col_types = FALSE) %>% 
+  mutate(female = factor(female),
+         job = factor(job),
+         rent = factor(rent),
+         own_res = factor(own_res),
+         new_car = factor(new_car),
+         mobile = factor(mobile),
+         chk_acct = factor(chk_acct),
+         sav_acct = factor(sav_acct)) 
+
+```
+
+
+### How does the decision tree model classify customers, and how accurate are its predictions?
+
+```{r}
+tree_model_a <- rpart(formula = answered ~., data = advise_invest_clean)
+table(predicted = predict(tree_model_a, type = "class"),
+observed = advise_invest_clean$answered)
+```
+
+### What is the cost-benefit analysis, and how does it help evaluate the model's performance?
+
+```{r}
+Values<-list(c("predicted yes", "predicted no"),c("observed yes", "observed no"))
+costbenefit_matrix <- matrix(c(75,0,-25,0), ncol = 2, dimnames = Values)
+costbenefit_matrix
+13820*75-3008*25
+```
+
+### Calculate the net benefit matrix
+```{r}
+(13820+2304)*75 - (10367+3008)*25
+```
+
+### How does adjusting the decision threshold affect model outcomes and business decisions
+```{r}
+tree_model_a <- rpart(formula = answered ~., data = advise_invest_clean)
+table(predicted = ifelse(predict(tree_model_a, type = "prob")[,2] >= .3, "YES", "NO"),
+      observed = advise_invest_clean$answered)
+
+14268*75-3776*25
+
+```
+
+### How are the model's predictions applied to a new dataset, and what does it reveal about potential customer churn?
+
+```{r}
+predict(tree_model_a, 
+        data = customer_data_clean, 
+        type = "prob") [ ,2] %>% 
+  head(25)
+
+glimpse(customer_data_clean)
+
+customercontacts <- customer_data_clean %>% 
+  select(customer_id) %>% 
+  mutate(churn = predict(tree_model_a, 
+        newdata = customer_data_clean, 
+        type = "prob") [ ,2]) %>%
+  filter(churn>=0.3)
+
+glimpse(customercontacts)
+```
+
+
+

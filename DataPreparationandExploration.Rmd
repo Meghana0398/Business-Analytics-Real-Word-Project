@@ -1,0 +1,68 @@
+---
+title: "Project: Modeling with Classification Trees"
+author: "Meghana Nerusu"
+output: html_document  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE) 
+library(tidyverse)
+library(dplyr)
+library(rpart)
+library(rpart.plot)
+```
+## Data Cleaning
+```{r}
+
+advise_invest_clean <- read_csv("adviseinvest.csv" , show_col_types = FALSE)  %>%            
+  select(-product) %>%                                        # Remove the product column
+  na.omit %>%                                                 # Remove rows with NAs
+  filter(income > 0,                                          # Filter out mistaken data
+         num_accts < 5) %>% 
+  mutate(answered = ifelse(answered==0, "no","yes"),          # Turn answered into yes/no 
+         answered = factor(answered,                          # Turn answered into factor
+                           levels  = c("no", "yes")),         # Specify factor levels
+         female = factor(female),                             # Make other binary and                                                                       categorical variables into factors
+         job = factor(job),
+         rent = factor(rent),
+         own_res = factor(own_res),
+         new_car = factor(new_car),
+         mobile = factor(mobile),
+         chk_acct = factor(chk_acct),
+         sav_acct = factor(sav_acct)) 
+advise_invest_clean
+summary(advise_invest_clean)
+
+
+```
+
+## Finding the Accuracy of Answered
+
+```{r}
+mean(advise_invest_clean$answered == 'yes')
+```
+
+## Finding the Accuracy of Income Model
+
+```{r}
+income_model <- rpart(formula = answered ~ income, data = advise_invest_clean)
+rpart.plot(x = income_model)
+income_model
+(predict(object = income_model, type = "class") == advise_invest_clean$answered) %>% mean
+```
+
+## Plot the Visualisation of tree model
+```{r}
+tree_model_a <- rpart(formula = answered ~., data = advise_invest_clean)
+rpart.plot(x = tree_model_a)
+tree_model_a
+rpart.plot(tree_model_a, tweak = 1.5, roundint = T)
+```
+
+## Find the Accuracy of Tree Model
+```{r}
+(predict(object = tree_model_a, type = "class") == advise_invest_clean$answered) %>% mean
+```
+
+
+
