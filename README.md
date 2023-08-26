@@ -1,5 +1,5 @@
 # AdviseInvest Case
-You work on a small team of data analysts at AdviseInvest, a venture-backed startup. The Director of Sales at AdviseInvest has approached your team asking for help solving a staffing problem.
+AdviseInvest is a venture-backed startup. The Director of Sales at AdviseInvest has approached you asking for help solving a staffing problem.
 
 # The Company
 The company’s mission is to provide tools and support to help ordinary people gain control of their personal finances. The company leverages technology to provide affordable financial advice to a national client base.
